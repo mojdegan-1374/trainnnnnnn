@@ -11,3 +11,4 @@ def hello(a, b):
         print("ghalate")
         
 hello(a, b)
+print ("hello")
