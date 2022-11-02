@@ -1,3 +1,5 @@
-hug
 fastapi
 pymongo
+uvicorn
+selenium
+webdriver-manager
