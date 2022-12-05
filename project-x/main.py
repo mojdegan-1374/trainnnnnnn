@@ -6,6 +6,9 @@ from pymongo import MongoClient
 from fastapi import FastAPI, BackgroundTasks, Request, Response
 import uvicorn
 import time
+import convert_numbers
+import uuid
+
 
 app = FastAPI()
 
@@ -20,14 +23,14 @@ def dbc():
 def getDollar():
     browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     browser.get('https://www.iranjib.ir/showgroup/23/realtime_price/')
-    dollar = browser.find_element(By.ID, 'f_127_63_pr').text
+    dollar = browser.find_element(By.ID, 'f_16390_68_pr').text
     browser.quit()
+    return dollar
+    # payload = {
+    #     "price" : dollar
+    # }
     
-    payload = {
-        "price" : dollar
-    }
-    
-    dbc().prices.insert_one(payload)
+    # dbc().prices.insert_one(payload)
 
 
 # API endpoint
@@ -38,6 +41,42 @@ def price():
     return {
         "gheymat" : price['price']
     }
+
+# API buy
+@app.get("/buy/{amount}")
+def buy(amount):
+    dollar = getDollar()
+    
+    total = int(convert_numbers.persian_to_english(dollar)) * int(amount)
+    payload = {
+        "clientID" : uuid.uuid4().hex,
+        "amount" : amount,
+        "dollar" : convert_numbers.persian_to_english(dollar),
+        "total" : total
+    }
+    # BackgroundTasks.add_task()
+    dbc().order.insert_one(payload)
+    return {
+        "clientID" : payload.get("clientID"),
+        "amount" : payload.get("amount"),
+        "dollar" : payload.get("dollar"),
+        "total" : payload.get("total")
+    }
+# API order
+@app.get("/order/{clientID}")
+def order(clientID):
+    checkOrder = dbc().order.find_one({'clientID' : clientID})
+    return { 
+        "amount" : checkOrder["amount"],
+        "dollar" : checkOrder["dollar"],
+        "total" : checkOrder["total"]
+     }
+
+
+    
+    
+
+
 
 
 
